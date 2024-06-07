@@ -12,6 +12,9 @@ second_df = pd.read_excel(second_sheet_path, sheet_name='Sheet2')
 # Get the list of items from the second sheet
 items_to_match = set(second_df.iloc[:, 0].dropna().astype(str))
 
+# Specify the column to check in the first sheet
+column_to_check = 'B'
+
 # Create a new Excel file to save the modified data
 output_path = 'modified_first_sheet.xlsx'
 writer = pd.ExcelWriter(output_path, engine='xlsxwriter')
@@ -26,19 +29,25 @@ for col_num, header in enumerate(first_df.columns):
 # Write data with conditional formatting
 for row_num, (index, row) in enumerate(first_df.iterrows(), start=1):
     for col_num, cell_value in enumerate(row):
-        if isinstance(cell_value, str) and cell_value.startswith('{') and cell_value.endswith('}'):
-            items = cell_value.strip('{}').split(', ')
-            new_items = []
-            for item in items:
-                clean_item = item.strip("'")
-                if clean_item in items_to_match:
-                    new_items.append(f"{clean_item}")
-                    worksheet.write_rich_string(row_num, col_num, red_format, f"'{clean_item}'", ', ', *new_items)
-                else:
-                    new_items.append(f"'{clean_item}'")
-            worksheet.write_string(row_num, col_num, f"{{{', '.join(new_items)}}}")
+        # Check if the current column is the specified column
+        if first_df.columns[col_num] == column_to_check:
+            if isinstance(cell_value, str) and cell_value.startswith('{') and cell_value.endswith('}'):
+                items = cell_value.strip('{}').split(', ')
+                new_items = []
+                for item in items:
+                    clean_item = item.strip("'")
+                    if clean_item in items_to_match:
+                        # Append the matched item with red format
+                        new_items.append(red_format, f"'{clean_item}'")
+                    else:
+                        new_items.append(f"'{clean_item}'")
+                # Write the cell with formatted items
+                worksheet.write_rich_string(row_num, col_num, *new_items)
+            else:
+                worksheet.write(row_num, col_num, cell_value)
         else:
+            # Write other columns without modification
             worksheet.write(row_num, col_num, cell_value)
 
 # Save the modified workbook
-workbook.close()
+writer.save()
