@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 import xlsxwriter
 
 # Specify your file paths
@@ -26,6 +27,13 @@ red_format = workbook.add_format({'font_color': 'red'})
 for col_num, header in enumerate(first_df.columns):
     worksheet.write(0, col_num, header)
 
+# Function to safely write cell values, converting NaN and INF to None
+def safe_write(worksheet, row, col, value):
+    if pd.isna(value) or np.isinf(value):
+        worksheet.write(row, col, None)
+    else:
+        worksheet.write(row, col, value)
+
 # Write data with conditional formatting
 for row_num, (index, row) in enumerate(first_df.iterrows(), start=1):
     for col_num, cell_value in enumerate(row):
@@ -38,16 +46,23 @@ for row_num, (index, row) in enumerate(first_df.iterrows(), start=1):
                     clean_item = item.strip("'")
                     if clean_item in items_to_match:
                         # Append the matched item with red format
-                        new_items.append(red_format, f"'{clean_item}'")
+                        new_items.append(red_format)
+                        new_items.append(f"'{clean_item}'")
+                        new_items.append(', ')
                     else:
                         new_items.append(f"'{clean_item}'")
+                        new_items.append(', ')
+                # Remove the last comma and space
+                if new_items:
+                    new_items.pop()
                 # Write the cell with formatted items
                 worksheet.write_rich_string(row_num, col_num, *new_items)
             else:
-                worksheet.write(row_num, col_num, cell_value)
+                safe_write(worksheet, row_num, col_num, cell_value)
         else:
             # Write other columns without modification
-            worksheet.write(row_num, col_num, cell_value)
+            safe_write(worksheet, row_num, col_num, cell_value)
 
 # Save the modified workbook
 writer.save()
+
