@@ -1,5 +1,4 @@
 import pandas as pd
-import numpy as np
 import xlsxwriter
 
 # Specify your file paths
@@ -20,7 +19,7 @@ column_to_check = 'B'
 output_path = 'modified_first_sheet.xlsx'
 writer = pd.ExcelWriter(output_path, engine='xlsxwriter')
 workbook = writer.book
-worksheet = workbook.add_worksheet('Sheet1')
+worksheet = writer.sheets['Sheet1'] = workbook.add_worksheet('Sheet1')
 red_format = workbook.add_format({'font_color': 'red'})
 
 # Write headers
@@ -29,7 +28,7 @@ for col_num, header in enumerate(first_df.columns):
 
 # Function to safely write cell values, converting NaN and INF to None
 def safe_write(worksheet, row, col, value):
-    if pd.isna(value) or np.isinf(value):
+    if pd.isna(value):
         worksheet.write(row, col, None)
     else:
         worksheet.write(row, col, value)
@@ -65,4 +64,5 @@ for row_num, (index, row) in enumerate(first_df.iterrows(), start=1):
 
 # Save the modified workbook
 writer.save()
+
 
