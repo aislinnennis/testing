@@ -1,0 +1,50 @@
+import dash
+import dash_core_components as dcc
+import dash_html_components as html
+from dash.dependencies import Input, Output
+import dash_leaflet as dl
+import dash_leaflet.express as dlx
+
+# Initialize the Dash app
+app = dash.Dash(__name__)
+
+# List of locations and information
+locations = [
+    {'name': 'New York', 'location': [40.7128, -74.0060], 'info': 'New York City, USA'},
+    {'name': 'London', 'location': [51.5074, -0.1278], 'info': 'London, UK'},
+    {'name': 'Tokyo', 'location': [35.6895, 139.6917], 'info': 'Tokyo, Japan'},
+    # Add more locations as needed
+]
+
+# Convert locations to GeoJSON format
+geojson_data = dlx.geojson_to_geobuf(dlx.dicts_to_geojson([{
+    'name': loc['name'],
+    'lat': loc['location'][0],
+    'lon': loc['location'][1],
+    'popup': loc['info']
+} for loc in locations]))
+
+# Layout of the Dash app
+app.layout = html.Div([
+    html.H1("Interactive Map Dashboard"),
+    dl.Map(style={'width': '100%', 'height': '80vh'}, center=[20, 0], zoom=2, children=[
+        dl.TileLayer(),
+        dl.GeoJSON(data=geojson_data, id="geojson", cluster=True, zoomToBoundsOnClick=True)
+    ])
+])
+
+# Callback to update the popup content based on hover
+@app.callback(
+    Output('geojson', 'children'),
+    [Input('geojson', 'click_feature')]
+)
+def display_info(feature):
+    if feature is not None:
+        name = feature['properties']['name']
+        popup = feature['properties']['popup']
+        return [dl.Popup([html.H4(name), html.P(popup)])]
+    return []
+
+# Run the app
+if __name__ == '__main__':
+    app.run_server(debug=True)
