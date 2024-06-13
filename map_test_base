@@ -4,23 +4,22 @@ import dash_html_components as html
 from dash.dependencies import Input, Output
 import dash_leaflet as dl
 import dash_leaflet.express as dlx
+import pandas as pd
+
+# Load the Excel file
+df = pd.read_excel("locations.xlsx")
+
+# Convert the DataFrame to a list of dictionaries
+locations = df.to_dict('records')
 
 # Initialize the Dash app
 app = dash.Dash(__name__)
 
-# List of locations and information
-locations = [
-    {'name': 'New York', 'location': [40.7128, -74.0060], 'info': 'New York City, USA'},
-    {'name': 'London', 'location': [51.5074, -0.1278], 'info': 'London, UK'},
-    {'name': 'Tokyo', 'location': [35.6895, 139.6917], 'info': 'Tokyo, Japan'},
-    # Add more locations as needed
-]
-
 # Convert locations to GeoJSON format
 geojson_data = dlx.geojson_to_geobuf(dlx.dicts_to_geojson([{
     'name': loc['name'],
-    'lat': loc['location'][0],
-    'lon': loc['location'][1],
+    'lat': loc['latitude'],
+    'lon': loc['longitude'],
     'popup': loc['info']
 } for loc in locations]))
 
