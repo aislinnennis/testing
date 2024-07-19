@@ -1,0 +1,56 @@
+import time
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.chrome.options import Options
+from PIL import Image
+import pytesseract
+
+# Configure the path to Tesseract OCR executable
+pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
+
+# Chrome driver setup
+chrome_options = Options()
+chrome_options.add_argument("--headless")  # Run in headless mode
+service = Service('path/to/chromedriver')
+driver = webdriver.Chrome(service=service, options=chrome_options)
+
+def capture_screenshot(input_combination, output_image_path):
+    driver.get("https://www.silicon-edge.co.uk/j/index.php/resources/die-per-wafer")
+
+    # Input the combination
+    input_field = driver.find_element(By.NAME, 'your_input_field_name')  # Update this selector based on the site's input field
+    input_field.clear()
+    input_field.send_keys(input_combination)
+    input_field.send_keys(Keys.RETURN)
+
+    # Wait for the result to load (adjust the sleep time as needed)
+    time.sleep(3)
+
+    # Capture the screenshot of the resulting image
+    image_element = driver.find_element(By.XPATH, 'xpath_to_image')  # Update this selector based on the site's image element
+    image_element.screenshot(output_image_path)
+
+def extract_text_from_image(image_path):
+    image = Image.open(image_path)
+    text = pytesseract.image_to_string(image)
+    return text
+
+# Example combinations (replace with your actual combinations)
+combinations = ["combination1", "combination2", "combination3"]
+
+# Process each combination
+results = {}
+for combination in combinations:
+    output_image_path = f"screenshots/{combination}.png"
+    capture_screenshot(combination, output_image_path)
+    extracted_text = extract_text_from_image(output_image_path)
+    results[combination] = extracted_text
+
+# Print the results
+for combination, text in results.items():
+    print(f"Combination: {combination}, Extracted Text: {text}")
+
+# Close the browser
+driver.quit()
