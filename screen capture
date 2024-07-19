@@ -1,7 +1,6 @@
 import time
 from selenium import webdriver
 from selenium.webdriver.common.by import By
-from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.edge.service import Service
 from selenium.webdriver.edge.options import Options
 from PIL import Image
@@ -19,11 +18,15 @@ driver = webdriver.Edge(service=service, options=edge_options)
 def capture_screenshot(input_combination, output_image_path):
     driver.get("https://www.silicon-edge.co.uk/j/index.php/resources/die-per-wafer")
 
-    # Input the combination
-    input_field = driver.find_element(By.NAME, 'your_input_field_name')  # Update this selector based on the site's input field
-    input_field.clear()
-    input_field.send_keys(input_combination)
-    input_field.send_keys(Keys.RETURN)
+    # Input the combinations
+    for input_name, input_value in input_combination.items():
+        input_field = driver.find_element(By.NAME, input_name)  # Find the input field by its name
+        input_field.clear()
+        input_field.send_keys(str(input_value))
+    
+    # Submit the form or trigger the calculation (if needed)
+    submit_button = driver.find_element(By.XPATH, 'xpath_to_submit_button')  # Update this selector based on the site's submit button
+    submit_button.click()
 
     # Wait for the result to load (adjust the sleep time as needed)
     time.sleep(3)
@@ -38,15 +41,20 @@ def extract_text_from_image(image_path):
     return text
 
 # Example combinations (replace with your actual combinations)
-combinations = ["combination1", "combination2", "combination3"]
+# Each dictionary represents a set of input values
+combinations = [
+    {"input_field_name1": "value1a", "input_field_name2": "value2a"},
+    {"input_field_name1": "value1b", "input_field_name2": "value2b"},
+    # Add more combinations as needed
+]
 
 # Process each combination
 results = {}
-for combination in combinations:
-    output_image_path = f"screenshots/{combination}.png"
+for i, combination in enumerate(combinations):
+    output_image_path = f"screenshots/combination_{i}.png"
     capture_screenshot(combination, output_image_path)
     extracted_text = extract_text_from_image(output_image_path)
-    results[combination] = extracted_text
+    results[f"combination_{i}"] = extracted_text
 
 # Print the results
 for combination, text in results.items():
