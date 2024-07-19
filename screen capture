@@ -2,19 +2,19 @@ import time
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.chrome.service import Service
-from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.edge.service import Service
+from selenium.webdriver.edge.options import Options
 from PIL import Image
 import pytesseract
 
 # Configure the path to Tesseract OCR executable
 pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
 
-# Chrome driver setup
-chrome_options = Options()
-chrome_options.add_argument("--headless")  # Run in headless mode
-service = Service('path/to/chromedriver')
-driver = webdriver.Chrome(service=service, options=chrome_options)
+# Edge driver setup
+edge_options = Options()
+edge_options.add_argument("--headless")  # Run in headless mode
+service = Service('path/to/edgedriver')  # Update with the actual path to the Edge WebDriver
+driver = webdriver.Edge(service=service, options=edge_options)
 
 def capture_screenshot(input_combination, output_image_path):
     driver.get("https://www.silicon-edge.co.uk/j/index.php/resources/die-per-wafer")
