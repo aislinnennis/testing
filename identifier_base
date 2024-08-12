@@ -1,0 +1,35 @@
+import pandas as pd
+
+# Load the first Excel document containing the list of identifiers
+df1 = pd.read_excel('identifiers.xlsx', sheet_name='Sheet1')
+
+# Load the second Excel document where you'll search for the identifiers
+df2 = pd.read_excel('data.xlsx', sheet_name='Sheet1')
+
+# Initialize a list to store the results
+results = []
+
+# Iterate through each identifier in the first DataFrame
+for identifier in df1['Identifier']:
+    # Search for the identifier in the second DataFrame
+    matches = df2[df2['Identifier'] == identifier]
+    
+    # Extract the values from the desired column (e.g., 'DataColumn')
+    values = matches['DataColumn'].tolist()
+    
+    # Join the values with a comma
+    result = ",".join(map(str, values))
+    
+    # Append to the results list with a semicolon to separate different identifiers
+    results.append(result)
+
+# Join the results with a semicolon to separate different identifiers
+final_result = ";".join(results)
+
+# Create a new DataFrame to store the results
+output_df = pd.DataFrame({
+    'Values': [final_result]
+})
+
+# Save the results to a new Excel document
+output_df.to_excel('output.xlsx', index=False)
