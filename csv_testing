@@ -1,0 +1,52 @@
+import pandas as pd
+import os
+
+# Read the Excel file
+excel_file = 'input_file.xlsx'  # Replace with your file path
+df = pd.read_excel(excel_file)
+
+# Define the column to use for naming the CSV files
+name_column = 'NameColumn'  # Replace with the actual column name
+
+# Define the column that needs to be split into sections and rows
+split_column = 'SplitColumn'  # Replace with the column that contains the data to split
+
+# Create a directory to store the CSV files (optional)
+output_directory = 'output_csv_files'
+os.makedirs(output_directory, exist_ok=True)
+
+# Iterate over each row to create individual CSV files
+for index, row in df.iterrows():
+    # Create a list to hold the rows for the new DataFrame
+    rows = []
+
+    # Split the cell content by semicolons to create sections
+    sections = str(row[split_column]).split(';')
+    
+    for section in sections:
+        # Split the section by commas to create rows
+        items = section.split(',')
+        for item in items:
+            new_row = row.copy()
+            new_row[split_column] = item.strip()  # Replace with the individual item
+            rows.append(new_row)
+
+    # Convert the list of rows into a DataFrame
+    new_df = pd.DataFrame(rows)
+
+    # Add custom columns
+    new_df['Blank Column 1'] = ''  # Add a blank column
+    new_df['Blank Column 2'] = ''  # Add another blank column
+    new_df['Filled Column 1'] = 'Default Value 1'  # Add a column with default values
+    new_df['Filled Column 2'] = 'Default Value 2'  # Add another column with default values
+
+    # Determine the filename based on the name column value
+    file_name = f"{row[name_column]}.csv"
+
+    # Save the new DataFrame to a CSV file
+    output_file = os.path.join(output_directory, file_name)
+    new_df.to_csv(output_file, index=False)
+
+    print(f"CSV file '{output_file}' created successfully.")
+
+print("All CSV files created successfully.")
