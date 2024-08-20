@@ -1,0 +1,50 @@
+import os
+import pandas as pd
+
+# Function to process each Excel file
+def process_excel_file(file_path):
+    # Read the Excel file
+    df = pd.read_excel(file_path, header=None)
+
+    # Separate sections by blank lines (rows with all NaN values)
+    sections = []
+    current_section = []
+
+    for _, row in df.iterrows():
+        if row.isna().all():
+            if current_section:
+                sections.append(pd.DataFrame(current_section))
+                current_section = []
+        else:
+            current_section.append(row)
+
+    # Append the last section if not empty
+    if current_section:
+        sections.append(pd.DataFrame(current_section))
+
+    # Remove duplicates within each section
+    cleaned_sections = [section.drop_duplicates() for section in sections]
+
+    # Combine the cleaned sections back together with blank lines in between
+    cleaned_df = pd.concat([section.append(pd.DataFrame([[float('nan')] * len(section.columns)])) for section in cleaned_sections]).reset_index(drop=True)
+
+    return cleaned_df
+
+# Function to process all Excel files in a folder
+def process_all_excel_files(input_folder, output_folder):
+    if not os.path.exists(output_folder):
+        os.makedirs(output_folder)
+
+    for filename in os.listdir(input_folder):
+        if filename.endswith('.xlsx'):
+            file_path = os.path.join(input_folder, filename)
+            cleaned_df = process_excel_file(file_path)
+            output_path = os.path.join(output_folder, filename)
+            cleaned_df.to_excel(output_path, index=False, header=False)
+
+# Define the input and output folders
+input_folder = 'path_to_input_folder'
+output_folder = 'path_to_output_folder'
+
+# Process all Excel files
+process_all_excel_files(input_folder, output_folder)
