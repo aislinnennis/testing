@@ -1,0 +1,48 @@
+import os
+import pandas as pd
+
+def get_unique_sections(df):
+    # List to store each section as a DataFrame
+    sections = []
+    current_section = []
+
+    for _, row in df.iterrows():
+        if row.isnull().all():
+            if current_section:  # If current section is not empty
+                section_df = pd.DataFrame(current_section)
+                if section_df not in sections:
+                    sections.append(section_df)
+                current_section = []  # Reset for next section
+        else:
+            current_section.append(row)
+
+    # Add the last section if not added
+    if current_section:
+        section_df = pd.DataFrame(current_section)
+        if section_df not in sections:
+            sections.append(section_df)
+
+    # Combine all unique sections into a single DataFrame
+    return pd.concat(sections, ignore_index=True)
+
+def process_excel_files(input_folder, output_folder):
+    if not os.path.exists(output_folder):
+        os.makedirs(output_folder)
+
+    # Iterate through all Excel files in the input folder
+    for filename in os.listdir(input_folder):
+        if filename.endswith(".xlsx"):
+            filepath = os.path.join(input_folder, filename)
+            df = pd.read_excel(filepath)
+
+            # Extract unique sections
+            unique_sections_df = get_unique_sections(df)
+
+            # Save the processed DataFrame to the new folder
+            output_filepath = os.path.join(output_folder, filename)
+            unique_sections_df.to_excel(output_filepath, index=False)
+
+if __name__ == "__main__":
+    input_folder = "path_to_input_folder"  # Replace with your input folder path
+    output_folder = "path_to_output_folder"  # Replace with your output folder path
+    process_excel_files(input_folder, output_folder)
