@@ -1,0 +1,74 @@
+import os
+import pandas as pd
+from openpyxl import load_workbook
+from openpyxl.utils.dataframe import dataframe_to_rows
+
+def process_excel_file(file_path, output_dir):
+    # Load the Excel workbook and worksheet
+    wb = load_workbook(file_path)
+    sheet = wb.active
+    
+    # Read the data into a pandas DataFrame, skipping blank rows
+    data = pd.DataFrame(sheet.values).dropna(how='all')
+    
+    # The first row is assumed to be the header
+    header = data.iloc[0].values
+    data.columns = header
+    data = data[1:]
+    
+    # List to store unique sections
+    unique_sections = []
+    
+    # Split the data into sections using blank rows
+    sections = data[data.isnull().all(axis=1)].index.tolist()
+    sections.append(len(data))  # Add the end of the file as the last section break
+    
+    prev_idx = 0
+    for idx in sections:
+        section = data.iloc[prev_idx:idx].dropna(how='all')
+        prev_idx = idx + 1
+        
+        # Sort the section by a specified column (e.g., 'Column1')
+        sorted_section = section.sort_values(by='Column1')
+        
+        # Check for uniqueness and add unique sections
+        if not any(sorted_section.equals(unique_section) for unique_section in unique_sections):
+            unique_sections.append(sorted_section)
+    
+    # Create a new workbook for the output
+    new_wb = load_workbook(file_path)
+    new_ws = new_wb.active
+    
+    # Clear existing rows except the header
+    for row in new_ws.iter_rows(min_row=2, max_row=new_ws.max_row):
+        for cell in row:
+            cell.value = None
+    
+    # Write unique sections back to the Excel file
+    row_idx = 2
+    for section in unique_sections:
+        for r in dataframe_to_rows(section, index=False, header=False):
+            new_ws.append(r)
+        row_idx += len(section) + 1  # Add a blank row between sections
+        new_ws.append([])
+
+    # Save the workbook to the output directory
+    output_file_path = os.path.join(output_dir, os.path.basename(file_path))
+    new_wb.save(output_file_path)
+
+def process_excel_folder(input_dir, output_dir):
+    # Ensure the output directory exists
+    os.makedirs(output_dir, exist_ok=True)
+    
+    # Iterate through all Excel files in the input directory
+    for filename in os.listdir(input_dir):
+        if filename.endswith('.xlsx'):
+            file_path = os.path.join(input_dir, filename)
+            process_excel_file(file_path, output_dir)
+
+# Define input and output directories
+input_dir = 'path_to_your_input_folder'
+output_dir = 'path_to_your_output_folder'
+
+# Process the Excel files
+process_excel_folder(input_dir, output_dir)
